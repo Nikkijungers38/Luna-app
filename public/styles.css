@@ -127,3 +127,12 @@ footer {
   .row { grid-template-columns: 1fr; }
   .card { padding: 20px; }
 }
+input[type="date"], input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  height: 48px;
+  color-scheme: dark;
+}
+.row > label { min-width: 0; }
