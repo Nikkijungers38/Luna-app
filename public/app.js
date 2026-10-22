@@ -45,6 +45,11 @@
     return div;
   }
 
+  const resetBtn = document.createElement('button');
+  resetBtn.type = 'button';
+  resetBtn.textContent = 'Start over';
+  resetBtn.style.cssText = 'background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:.85rem;margin-left:12px;padding:0';
+
   function render() {
     const m = state.me;
     const p = m.pricing;
@@ -73,8 +78,11 @@
       $('onboarding').hidden = false; $('chat').hidden = true; $('balance').hidden = true;
     } else {
       $('onboarding').hidden = true; $('chat').hidden = false; $('balance').hidden = false;
+      const signText = m.profile.cuspSign
+        ? `${m.profile.sign} (cusp with ${m.profile.cuspSign})` : m.profile.sign;
       $('chartLine').textContent =
-        `☉ ${m.profile.sign} · ${m.profile.element} · Life path ${m.profile.lifePath}`;
+        `☉ ${signText} · ${m.profile.element} · Life path ${m.profile.lifePath}`;
+      $('chartLine').appendChild(resetBtn);
     }
   }
 
@@ -136,6 +144,15 @@
   $('balance').addEventListener('click', () => openPaywall(false));
   $('pwClose').addEventListener('click', () => { $('paywall').hidden = true; });
   $('subBtn').addEventListener('click', () => checkout('subscription'));
+  resetBtn.addEventListener('click', async () => {
+    if (!confirm('Start over with new birth details? Your remaining time is kept.')) return;
+    const r = await api('reset', {});
+    if (!r.ok) return;
+    state.me = r.data;
+    $('messages').innerHTML = '';
+    $('profileForm').reset();
+    render();
+  });
 
   // Local countdown for display + server heartbeat for actual billing
   setInterval(() => {
