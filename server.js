@@ -68,22 +68,34 @@ function tick(u) {
 }
 
 // ---------- Astrology helpers ----------
-const SIGNS = [
-  ['Capricorn', 12, 22, 'Earth', 'Cardinal'], ['Aquarius', 1, 20, 'Air', 'Fixed'],
-  ['Pisces', 2, 19, 'Water', 'Mutable'], ['Aries', 3, 21, 'Fire', 'Cardinal'],
-  ['Taurus', 4, 20, 'Earth', 'Fixed'], ['Gemini', 5, 21, 'Air', 'Mutable'],
-  ['Cancer', 6, 21, 'Water', 'Cardinal'], ['Leo', 7, 23, 'Fire', 'Fixed'],
-  ['Virgo', 8, 23, 'Earth', 'Mutable'], ['Libra', 9, 23, 'Air', 'Cardinal'],
-  ['Scorpio', 10, 23, 'Water', 'Fixed'], ['Sagittarius', 11, 22, 'Fire', 'Mutable'],
+const ZODIAC = [
+  ['Aries', 'Fire', 'Cardinal'], ['Taurus', 'Earth', 'Fixed'], ['Gemini', 'Air', 'Mutable'],
+  ['Cancer', 'Water', 'Cardinal'], ['Leo', 'Fire', 'Fixed'], ['Virgo', 'Earth', 'Mutable'],
+  ['Libra', 'Air', 'Cardinal'], ['Scorpio', 'Water', 'Fixed'], ['Sagittarius', 'Fire', 'Mutable'],
+  ['Capricorn', 'Earth', 'Cardinal'], ['Aquarius', 'Air', 'Fixed'], ['Pisces', 'Water', 'Mutable'],
 ];
-function sunSign(month, day) {
-  // SIGNS is ordered by start date within the year, starting with Capricorn (Dec 22 - Jan 19)
-  let current = SIGNS[0];
-  for (const s of SIGNS) {
-    if (month > s[1] || (month === s[1] && day >= s[2])) current = s;
-  }
-  if ((month === 12 && day >= 22) || (month === 1 && day < 20)) current = SIGNS[0];
-  return { sign: current[0], element: current[3], modality: current[4] };
+// Where the Sun is along the zodiac (0-360 degrees) at a moment in time.
+// Standard low-precision formula, accurate to about 0.01 degrees (a few minutes of the Sun's motion).
+function sunLongitude(ms) {
+  const n = ms / 86400000 + 2440587.5 - 2451545.0;
+  const rad = Math.PI / 180;
+  const L = 280.460 + 0.9856474 * n;
+  const g = (357.528 + 0.9856003 * n) * rad;
+  const lam = L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g);
+  return ((lam % 360) + 360) % 360;
+}
+const signIndexAt = (ms) => Math.floor(sunLongitude(ms) / 30);
+// Sun sign for a birth date. Birth time and place are not used, so if the Sun changes signs
+// during that calendar day we report the other sign as "cusp" and Luna mentions both.
+function sunSign(year, month, day) {
+  const start = Date.UTC(year, month - 1, day, 0, 0, 0);
+  const iStart = signIndexAt(start);
+  const iMid = signIndexAt(start + 12 * 3600000);
+  const iEnd = signIndexAt(start + 24 * 3600000 - 1);
+  const main = ZODIAC[iMid];
+  let cusp = null;
+  if (iStart !== iEnd) cusp = ZODIAC[iMid === iStart ? iEnd : iStart][0];
+  return { sign: main[0], element: main[1], modality: main[2], cusp };
 }
 function lifePath(dob) {
   let n = dob.replace(/-/g, '').split('').reduce((a, d) => a + Number(d), 0);
@@ -108,7 +120,7 @@ function systemPrompt(u) {
 ABOUT THE PERSON
 - Name: ${p.name}
 - Date of birth: ${p.dob}
-- Sun sign: ${p.sign} (${p.element}, ${p.modality})
+- Sun sign: ${p.sign} (${p.element}, ${p.modality})${p.cuspSign ? `\n- Born on a cusp day when the Sun moved between ${p.sign} and ${p.cuspSign}; you may mention both` : ''}
 - Life path number: ${p.lifePath}
 ${p.birthTime ? `- Birth time: ${p.birthTime}\n` : ''}${p.birthPlace ? `- Birth place: ${p.birthPlace}\n` : ''}- Main interest: ${p.focus}
 
@@ -252,14 +264,23 @@ app.post('/api/profile', (req, res) => {
     return res.status(400).json({ error: 'Please enter a valid date of birth.' });
   }
   if (!name || String(name).trim().length < 1) return res.status(400).json({ error: 'Please enter your name.' });
-  const s = sunSign(+m[2], +m[3]);
+  const s = sunSign(+m[1], +m[2], +m[3]);
   req.user.profile = {
     name: String(name).trim().slice(0, 40), dob,
     birthTime: String(birthTime || '').slice(0, 10), birthPlace: String(birthPlace || '').slice(0, 80),
     focus: ['Love', 'Career', 'Personal growth', 'Money', 'Friends & family'].includes(focus) ? focus : 'Personal growth',
-    sign: s.sign, element: s.element, modality: s.modality, lifePath: lifePath(dob),
+    sign: s.sign, cuspSign: s.cusp, element: s.element, modality: s.modality, lifePath: lifePath(dob),
   };
   req.user.history = [];
+  save();
+  res.json(me(req.user));
+});
+
+// Lets someone re-enter their birth details. Their remaining time is kept.
+app.post('/api/reset', (req, res) => {
+  req.user.profile = null;
+  req.user.history = [];
+  req.user.lastTick = null;
   save();
   res.json(me(req.user));
 });
