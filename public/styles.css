@@ -136,3 +136,21 @@ input[type="date"], input[type="time"] {
   color-scheme: dark;
 }
 .row > label { min-width: 0; }
+form label { overflow: hidden; }
+input[type="date"], input[type="time"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 48px;
+  margin: 6px 0 0;
+  text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
