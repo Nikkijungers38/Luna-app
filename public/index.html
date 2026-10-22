@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Luna · Astrology Readings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="stars" aria-hidden="true"></div>
+
+  <header class="top">
+    <div class="brand">✦ Luna</div>
+    <div class="top-right">
+      <span id="badge" class="badge" hidden>Member</span>
+      <button id="balance" class="pill" type="button" hidden>
+        <span id="balanceText">0:00</span> left
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Onboarding -->
+    <section id="onboarding" class="card" hidden>
+      <h1>Your personal reading</h1>
+      <p class="lead">Tell Luna a little about you. She reads your birth chart themes and the current sky to tell you stories about what's unfolding.</p>
+      <p class="trial" id="trialLine"></p>
+
+      <form id="profileForm">
+        <label>First name
+          <input name="name" required maxlength="40" autocomplete="given-name">
+        </label>
+        <label>Date of birth
+          <input name="dob" type="date" required>
+        </label>
+        <div class="row">
+          <label>Birth time <span class="opt">(optional)</span>
+            <input name="birthTime" type="time">
+          </label>
+          <label>Birth place <span class="opt">(optional)</span>
+            <input name="birthPlace" maxlength="80" placeholder="City, Country">
+          </label>
+        </div>
+        <label>What do you most want a reading about?
+          <select name="focus">
+            <option>Love</option>
+            <option>Career</option>
+            <option selected>Personal growth</option>
+            <option>Money</option>
+            <option>Friends &amp; family</option>
+          </select>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="agree" required>
+          <span>I'm 18 or older and understand readings are AI-generated and for entertainment only.</span>
+        </label>
+        <p id="formError" class="error" role="alert"></p>
+        <button class="primary" type="submit">Begin my reading</button>
+      </form>
+    </section>
+
+    <!-- Chat -->
+    <section id="chat" class="chat" hidden>
+      <div class="chart" id="chartLine"></div>
+      <div id="messages" class="messages" aria-live="polite"></div>
+      <form id="chatForm" class="composer">
+        <input id="chatInput" maxlength="1000" placeholder="Ask Luna anything..." autocomplete="off">
+        <button class="primary" type="submit" id="sendBtn">Send</button>
+      </form>
+      <p class="meter-note">The clock runs while this tab is open.</p>
+    </section>
+  </main>
+
+  <!-- Paywall -->
+  <div id="paywall" class="overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+      <button class="close" id="pwClose" type="button" aria-label="Close">×</button>
+      <h2 id="pwTitle">Keep the reading going</h2>
+      <p class="lead" id="pwLead"></p>
+
+      <div class="plan featured">
+        <div>
+          <strong id="subTitle"></strong>
+          <span id="subDetail" class="muted"></span>
+        </div>
+        <button class="primary" id="subBtn" type="button">Subscribe</button>
+      </div>
+
+      <h3>Or pay as you go</h3>
+      <div class="packs" id="packs"></div>
+      <p id="pwError" class="error" role="alert"></p>
+      <p class="muted small" id="modeNote"></p>
+    </div>
+  </div>
+
+  <footer>
+    For entertainment purposes only. Luna is an AI guide, not a human psychic, and readings are not predictions or advice. For medical, legal or financial decisions, consult a qualified professional.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
