@@ -1,0 +1,11 @@
+{
+  "name": "astro-app",
+  "version": "1.0.0",
+  "description": "AI astrology and psychic-style readings with free trial, per-minute credits and subscription",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
