@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0a1f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Luna">
   <title>Luna · Astrology Readings</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -98,5 +106,29 @@
   </footer>
 
   <script src="app.js"></script>
+  <script>
+    // Installable app: register the service worker, and show an install
+    // button only when the browser says the app is installable.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      const bar = document.querySelector('.top-right');
+      if (!bar || document.getElementById('installBtn')) return;
+      const btn = document.createElement('button');
+      btn.id = 'installBtn';
+      btn.className = 'pill';
+      btn.type = 'button';
+      btn.textContent = 'Install app';
+      btn.addEventListener('click', async () => {
+        await e.prompt();
+        btn.remove();
+      });
+      bar.prepend(btn);
+    });
+  </script>
 </body>
 </html>
