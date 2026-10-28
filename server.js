@@ -2,8 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
+const {
+  createPool, initDb, getUser, createUser, saveUser, clearLastTick,
+  deductTick, grantPaid, setSubscription, findUserByCustomer, addEvent,
+} = require('./db');
 
 // ---------- Config ----------
 const PORT = Number(process.env.PORT || 3000);
@@ -23,48 +26,35 @@ const anthropic = DEMO_AI
   : new (require('@anthropic-ai/sdk'))({ apiKey: process.env.ANTHROPIC_API_KEY });
 const stripe = DEV_BILLING ? null : require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-// ---------- Tiny JSON datastore (swap for a real DB in production) ----------
-const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
-fs.mkdirSync(DATA_DIR, { recursive: true });
-let db = { users: {}, events: [] };
-try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch (_) {}
-function save() {
-  const tmp = DB_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(db));
-  fs.renameSync(tmp, DB_FILE);
+// ---------- Postgres datastore (see db.js) ----------
+// The server refuses to start without DATABASE_URL: there is no file or
+// in-memory fallback, so a missing connection string can never silently
+// lose user data the way the old JSON file did on redeploys.
+let pool;
+try {
+  pool = createPool();
+} catch (err) {
+  console.error(err.message);
+  process.exit(1);
 }
 
 function newUser() {
   const id = crypto.randomUUID();
-  db.users[id] = {
+  return {
     id, createdAt: Date.now(), profile: null, history: [],
     trialSeconds: TRIAL_SECONDS, paidSeconds: 0, subSeconds: 0,
     sub: { active: false, customerId: null, subscriptionId: null },
     lastTick: null, chatTimes: [],
   };
-  return db.users[id];
 }
 
 const balance = (u) => Math.max(0, Math.floor(u.trialSeconds + u.paidSeconds + u.subSeconds));
 
-// Deduct time in this order: free trial, subscription allowance, purchased credits.
-function deduct(u, seconds) {
-  for (const k of ['trialSeconds', 'subSeconds', 'paidSeconds']) {
-    const take = Math.min(u[k], seconds);
-    u[k] -= take; seconds -= take;
-    if (seconds <= 0) break;
-  }
-}
-
 // Metering: the client sends a heartbeat while the reading tab is visible.
 // We bill elapsed time since the last tick, capped so idle gaps are never charged.
+// The deduction is one atomic UPDATE (see db.js deductTick).
 function tick(u) {
-  const now = Date.now();
-  if (u.lastTick && now - u.lastTick < 30000) {
-    deduct(u, Math.min((now - u.lastTick) / 1000, 15));
-  }
-  u.lastTick = now;
+  return deductTick(pool, u, Date.now());
 }
 
 // ---------- Astrology helpers ----------
@@ -185,7 +175,7 @@ async function reading(u, message) {
 const app = express();
 
 // Stripe webhook needs the raw body, so register it before express.json()
-app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   if (DEV_BILLING) return res.status(400).send('Stripe is not configured');
   let event;
   try {
@@ -193,31 +183,28 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req,
   } catch (err) {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
-  if (db.events.includes(event.id)) return res.json({ received: true, duplicate: true });
-  db.events.push(event.id);
-  db.events = db.events.slice(-500);
+  if (!(await addEvent(pool, event.id))) return res.json({ received: true, duplicate: true });
 
-  const byCustomer = (cid) => Object.values(db.users).find((x) => x.sub.customerId === cid);
   const obj = event.data.object;
 
   if (event.type === 'checkout.session.completed') {
-    const u = db.users[obj.client_reference_id];
+    const u = await getUser(pool, obj.client_reference_id);
     if (u) {
       if (obj.mode === 'payment' && obj.payment_status === 'paid') {
-        u.paidSeconds += Number(obj.metadata?.minutes || 0) * 60;
+        await grantPaid(pool, u.id, Number(obj.metadata?.minutes || 0) * 60);
       } else if (obj.mode === 'subscription') {
-        u.sub = { active: true, customerId: obj.customer, subscriptionId: obj.subscription };
-        u.subSeconds = SUB_MINUTES * 60;
+        await setSubscription(pool, u.id,
+          { active: true, customerId: obj.customer, subscriptionId: obj.subscription },
+          SUB_MINUTES * 60);
       }
     }
   } else if (event.type === 'invoice.paid' && obj.billing_reason === 'subscription_cycle') {
-    const u = byCustomer(obj.customer);
-    if (u) { u.sub.active = true; u.subSeconds = SUB_MINUTES * 60; } // monthly reset, no rollover
+    const u = await findUserByCustomer(pool, obj.customer);
+    if (u) { await setSubscription(pool, u.id, { ...u.sub, active: true }, SUB_MINUTES * 60); } // monthly reset, no rollover
   } else if (event.type === 'customer.subscription.deleted') {
-    const u = byCustomer(obj.customer);
-    if (u) { u.sub.active = false; u.subSeconds = 0; }
+    const u = await findUserByCustomer(pool, obj.customer);
+    if (u) { await setSubscription(pool, u.id, { ...u.sub, active: false }, 0); }
   }
-  save();
   res.json({ received: true });
 });
 
@@ -226,15 +213,20 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Identify the visitor by a cookie (prototype auth; add real accounts before launch)
-app.use('/api', (req, res, next) => {
-  let u = db.users[req.cookies.uid];
-  if (!u) {
-    u = newUser();
-    res.cookie('uid', u.id, { httpOnly: true, sameSite: 'lax', maxAge: 365 * 24 * 3600 * 1000 });
-    save();
+app.use('/api', async (req, res, next) => {
+  try {
+    let u = await getUser(pool, req.cookies.uid);
+    if (!u) {
+      u = newUser();
+      await createUser(pool, u);
+      res.cookie('uid', u.id, { httpOnly: true, sameSite: 'lax', maxAge: 365 * 24 * 3600 * 1000 });
+    }
+    req.user = u;
+    next();
+  } catch (err) {
+    console.error('Database error:', err.message);
+    res.status(503).json({ error: 'The database is unavailable right now. Please try again.' });
   }
-  req.user = u;
-  next();
 });
 
 const pricing = () => ({
@@ -256,7 +248,7 @@ const me = (u) => ({
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.get('/api/me', (req, res) => res.json(me(req.user)));
 
-app.post('/api/profile', (req, res) => {
+app.post('/api/profile', async (req, res) => {
   const { name, dob, birthTime, birthPlace, focus } = req.body || {};
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob || '');
   const d = m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
@@ -272,22 +264,23 @@ app.post('/api/profile', (req, res) => {
     sign: s.sign, cuspSign: s.cusp, element: s.element, modality: s.modality, lifePath: lifePath(dob),
   };
   req.user.history = [];
-  save();
+  await saveUser(pool, req.user);
   res.json(me(req.user));
 });
 
 // Lets someone re-enter their birth details. Their remaining time is kept.
-app.post('/api/reset', (req, res) => {
+app.post('/api/reset', async (req, res) => {
   req.user.profile = null;
   req.user.history = [];
   req.user.lastTick = null;
-  save();
+  await saveUser(pool, req.user);
+  await clearLastTick(pool, req.user.id);
   res.json(me(req.user));
 });
 
 // Heartbeat: called every ~10s while the reading is open and visible
-app.post('/api/tick', (req, res) => {
-  tick(req.user); save();
+app.post('/api/tick', async (req, res) => {
+  await tick(req.user);
   res.json({ balanceSeconds: balance(req.user) });
 });
 
@@ -301,18 +294,18 @@ app.post('/api/chat', async (req, res) => {
   u.chatTimes = (u.chatTimes || []).filter((t) => now - t < 60000);
   if (u.chatTimes.length >= 12) return res.status(429).json({ error: 'Slow down a little, the stars need a moment.' });
 
-  tick(u);
-  if (balance(u) <= 0) { save(); return res.status(402).json({ error: 'paywall', balanceSeconds: 0 }); }
+  await tick(u);
+  if (balance(u) <= 0) { return res.status(402).json({ error: 'paywall', balanceSeconds: 0 }); }
   u.chatTimes.push(now);
 
   try {
     const reply = await reading(u, message);
-    save();
+    await saveUser(pool, u);
     res.json({ reply, balanceSeconds: balance(u) });
   } catch (err) {
     console.error('Reading failed:', err.message);
     u.history.pop(); // drop the unanswered user turn
-    save();
+    await saveUser(pool, u);
     res.status(502).json({ error: 'The connection to the stars flickered. Please try again.' });
   }
 });
@@ -326,9 +319,14 @@ app.post('/api/checkout', async (req, res) => {
   if (!['minutes', 'subscription'].includes(plan)) return res.status(400).json({ error: 'Invalid plan.' });
 
   if (DEV_BILLING) { // no Stripe keys: grant instantly so you can test the whole flow
-    if (plan === 'minutes') u.paidSeconds += Number(minutes) * 60;
-    else { u.sub = { active: true, customerId: 'dev', subscriptionId: 'dev' }; u.subSeconds = SUB_MINUTES * 60; }
-    save();
+    if (plan === 'minutes') {
+      const paid = await grantPaid(pool, u.id, Number(minutes) * 60);
+      if (paid != null) u.paidSeconds = paid;
+    } else {
+      u.sub = { active: true, customerId: 'dev', subscriptionId: 'dev' };
+      u.subSeconds = SUB_MINUTES * 60;
+      await setSubscription(pool, u.id, u.sub, u.subSeconds);
+    }
     return res.json({ granted: true, ...me(u) });
   }
 
@@ -367,8 +365,16 @@ app.post('/api/portal', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Astro app on ${BASE_URL}`);
-  console.log(`  AI: ${DEMO_AI ? 'DEMO mode (no ANTHROPIC_API_KEY)' : `live (${MODEL}${WEB_SEARCH ? ' + web search' : ''})`}`);
-  console.log(`  Billing: ${DEV_BILLING ? 'DEV mode (no real charges)' : 'Stripe'}`);
-});
+(async () => {
+  try {
+    await initDb(pool);
+  } catch (err) {
+    console.error('Failed to initialize the database:', err.message);
+    process.exit(1);
+  }
+  app.listen(PORT, () => {
+    console.log(`Astro app on ${BASE_URL}`);
+    console.log(`  AI: ${DEMO_AI ? 'DEMO mode (no ANTHROPIC_API_KEY)' : `live (${MODEL}${WEB_SEARCH ? ' + web search' : ''})`}`);
+    console.log(`  Billing: ${DEV_BILLING ? 'DEV mode (no real charges)' : 'Stripe'}`);
+  });
+})();
