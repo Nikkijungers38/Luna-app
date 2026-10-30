@@ -78,6 +78,7 @@
     if (!m.profile) {
       $('onboarding').hidden = false; $('chat').hidden = true; $('balance').hidden = true;
       $('chartToggle').hidden = true; $('chartPanel').hidden = true;
+      $('menuSky').hidden = true;
       $('tarotToggle').hidden = true; $('tarotPanel').hidden = true;
       $('compatToggle').hidden = true; $('compatPanel').hidden = true;
       $('quickChips').hidden = true;
@@ -95,6 +96,7 @@
       $('chartLine').textContent = line;
       $('chartLine').appendChild(resetBtn);
       $('chartToggle').hidden = !ch;
+      $('menuSky').hidden = !ch;
       if (!ch) $('chartPanel').hidden = true;
       else if (state.chartFor !== ch) { state.chartFor = ch; buildChartPanel(ch); loadSky(); }
       $('quickChips').hidden = false;
@@ -339,6 +341,16 @@
   });
   $('chartToggle').addEventListener('click', () => {
     $('chartPanel').hidden = !$('chartPanel').hidden;
+  });
+  $('menuChat').addEventListener('click', () => {
+    $('chatInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('chatInput').focus({ preventScroll: true });
+  });
+  $('menuSky').addEventListener('click', () => {
+    $('chartPanel').hidden = false;
+    const feed = $('feedSection');
+    const target = feed && !feed.hidden ? feed : $('chartPanel');
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('chartAsk').addEventListener('click', () => {
     if (state.seconds <= 0) { openPaywall(true); return; }
