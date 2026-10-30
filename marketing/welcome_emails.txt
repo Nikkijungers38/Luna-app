@@ -1,0 +1,72 @@
+LUNA — VIP WELCOME SEQUENCE EMAIL TEMPLATES
+(pasted by Nikki, Oct 30, 2026)
+
+STATUS NOTES (Muse):
+- Email 1: usable once email accounts deploy (needs the Resend setup
+  already planned). The "magic link" wording should match the real flow:
+  Luna accounts use email + password with a reset link, so say "your chart
+  is ready" rather than implying a magic-link login.
+- Email 2: HOLD. It pitches the Social Synastry Engine as a live feature.
+  Friends/synastry is not built yet — sending this before it ships would
+  promise something the app doesn't do. Send only after synastry is live.
+
+======================================================================
+EMAIL 1: Immediately upon registration (Welcome)
+======================================================================
+Subject: Welcome to Luna, [First Name] – Your chart is ready.
+Preheader: Step into an astrology experience built uniquely around your
+exact birth chart.
+
+Hi [First Name],
+
+Welcome to Luna.
+
+You've officially left generic horoscopes behind. By tracking the sky
+down to the exact minute and coordinates of your birth, Luna has
+generated a precise, real-time map of your unique planetary transits.
+
+Your personal natal chart wheel and interactive daily timeline feed are
+now unlocked.
+
+[ BUTTON: Open the Luna Dashboard ]
+
+Here is what you should check out first today:
+- Your Active Transits: See exactly how today's planetary movements are
+  shifting your career and relationship energy.
+- Your AI Astrologer: Tap the chat bubble to ask your resident mentor any
+  specific natural language question about your chart.
+
+We're thrilled to have you in the inner circle.
+
+Warmly,
+The Luna Team
+
+======================================================================
+EMAIL 2: 48 hours post-registration (Social feature pitch) — HOLD
+======================================================================
+Subject: Stop guessing. Map your relationship compatibility instantly.
+Preheader: Connect with your circle on Luna to view deep side-by-side
+metric tables.
+
+Hi [First Name],
+
+Astrology is built to be shared.
+
+One of Luna's most powerful native features is the Social Synastry
+Engine. Instead of reading vague articles online, you can securely
+connect with friends, partners, or family members to view exact
+relationship dynamics in real-time.
+
+How to get started:
+1. Open your Luna dashboard and navigate to the "Circle" tab.
+2. Share your unique invite handle link with your inner circle.
+3. Once accepted, instantly access detailed side-by-side metric tables
+   tracking your communication styles, romantic chemistry, and areas for
+   long-term growth.
+
+[ BUTTON: Invite Your Friends Now ]
+
+Find out exactly where your charts align today!
+
+Warmly,
+The Luna Team
