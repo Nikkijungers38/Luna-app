@@ -91,6 +91,15 @@ form button.primary { width: 100%; margin-top: 6px; }
 .menu-card:hover { border-color: var(--violet); }
 .menu-card-wide { grid-column: 1 / -1; }
 .menu-card-name { font-weight: 700; font-size: .98rem; }
+.free-tag {
+  font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  background: rgba(244, 199, 106, .15); color: var(--gold); border: 1px solid rgba(244, 199, 106, .4);
+  border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 2px; white-space: nowrap;
+}
+.includes { margin: 16px 0 4px; }
+.includes-title { font-weight: 700; margin: 0 0 8px; }
+.includes ul { margin: 0 0 10px; padding-left: 20px; line-height: 1.55; color: var(--text); }
+.includes li { margin-bottom: 6px; }
 .menu-card-desc { color: var(--muted); font-size: .82rem; line-height: 1.4; }
 .messages {
   display: flex; flex-direction: column; gap: 12px;
