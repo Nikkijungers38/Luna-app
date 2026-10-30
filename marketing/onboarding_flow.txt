@@ -1,0 +1,36 @@
+LUNA — FRONTEND ONBOARDING DESIGN SPECIFICATION
+(pasted by Nikki, Oct 30, 2026 — build reference for the real Luna app)
+
+Theme Aesthetic: Deep cosmos dark mode, high-contrast typography,
+minimalist circular graphical assets, glassmorphism card containers.
+
+Screen 1: The Welcome Gateway
+- Center-aligned glowing vector constellation animation.
+- Headline: "Luna". Sub-headline: "Astrology mapped to your exact moment."
+- Button: "Discover Your Chart" -> Screen 2.
+
+Screen 2: Identity Profile Capture
+- Fields: [First Name], [Unique User Handle].
+- Progress bar at top: 33%.
+- Button: "Continue" (validates, stores to user record) -> Screen 3.
+  NOTE (Muse): handles arrive with the accounts deploy — accounts are
+  already built (email + password). Handle field slots into that signup.
+
+Screen 3: Precise Coordinates Intake
+- Date Picker [MM/DD/YYYY], Time Picker [HH:MM AM/PM] with checkbox
+  "I don't know my exact time" -> defaults to 12:00 PM + warning indicator.
+- Location search returning City, State, Country.
+  NOTE (Muse): Luna already does this with free OpenStreetMap geocoding
+  (no Google Places API key/cost) and its own ephemeris math (chart.js) —
+  same result, no paid API. Existing onboarding already collects name,
+  date, time (optional), place, focus.
+- On Continue: capture location string -> lat/lon floats -> compute Sun,
+  Moon, Rising -> Screen 4.
+
+Screen 4: The Natal Wheel Reveal
+- Dynamically rendered circular natal chart with house lines.
+- Big Three (Sun, Moon, Rising) highlighted with high-contrast tag chips.
+- Wheel fully interactive: tapping any node opens a modal with that
+  placement's description text. (Descriptions: meanings.js, built Oct 30.)
+- Button: "Enter Dashboard" -> main timeline feed (transits feed:
+  /api/transits engine built Oct 30; feed screen is the next UI chunk).
