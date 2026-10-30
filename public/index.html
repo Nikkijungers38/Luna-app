@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0a1f">
+  <meta name="theme-color" content="#0A0A0C">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,6 +12,9 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/png" href="/icon-192.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -21,6 +24,7 @@
     <div class="brand">✦ Luna</div>
     <div class="top-right">
       <span id="badge" class="badge" hidden>Member</span>
+      <button id="accountBtn" class="pill" type="button">Sign in</button>
       <button id="balance" class="pill" type="button" hidden>
         <span id="balanceText">0:00</span> left
       </button>
@@ -70,7 +74,79 @@
     <!-- Chat -->
     <section id="chat" class="chat" hidden>
       <div class="chart" id="chartLine"></div>
+      <div class="feature-btns">
+        <button id="chartToggle" class="pill" type="button" hidden>✦ Your birth chart</button>
+        <button id="tarotToggle" class="pill" type="button" hidden>✦ Tarot draw</button>
+        <button id="compatToggle" class="pill" type="button" hidden>✦ Compatibility</button>
+      </div>
+      <div id="chartPanel" class="chart-panel" hidden>
+        <div id="chartWheel" class="chart-wheel"></div>
+        <p class="muted small wheel-hint">Tap any planet, house number, or ASC on the wheel — or a line below — to see what it means.</p>
+        <ul id="chartList" class="chart-list"></ul>
+        <p id="chartAspects" class="muted small"></p>
+        <p id="chartNote" class="muted small"></p>
+        <div id="chartPop" class="chart-pop" hidden>
+          <button id="chartPopClose" class="close" type="button" aria-label="Close">×</button>
+          <div id="chartPopTitle" class="chart-pop-title"></div>
+          <p id="chartPopText"></p>
+        </div>
+        <div id="feedSection" class="feed-section" hidden>
+          <div class="feed-head">Today's sky over your chart</div>
+          <div class="range-chips">
+            <button class="pill range-chip active" type="button" data-range="today">Today</button>
+            <button class="pill range-chip" type="button" data-range="week">This week</button>
+            <button class="pill range-chip" type="button" data-range="month">This month</button>
+          </div>
+          <div id="feedList" class="feed-list"></div>
+          <button id="feedAsk" class="primary" type="button">Ask Luna about today</button>
+        </div>
+        <button id="chartAsk" class="primary" type="button">Ask Luna about my chart</button>
+      </div>
+      <div id="tarotPanel" class="chart-panel" hidden>
+        <div class="tarot-controls">
+          <button id="spreadOne" class="pill" type="button">Draw one card</button>
+          <button id="spreadThree" class="pill" type="button">Past · Present · Future</button>
+        </div>
+        <div id="tarotCards" class="tarot-cards"></div>
+        <p class="muted small">Drawing is free. Asking Luna about your cards uses reading time, like any message.</p>
+        <button id="tarotAsk" class="primary" type="button" hidden>Ask Luna about these cards</button>
+      </div>
+      <div id="compatPanel" class="chart-panel" hidden>
+        <form id="compatForm">
+          <p class="lead">Check your compatibility with someone — their birth details against your chart, in three honest scores.</p>
+          <label>Their first name
+            <input name="name" required maxlength="40" autocomplete="off">
+          </label>
+          <label>Their date of birth
+            <input name="dob" type="date" required>
+          </label>
+          <div class="row">
+            <label>Birth time <span class="opt">(optional)</span>
+              <input name="birthTime" type="time">
+            </label>
+            <label>Birth place <span class="opt">(optional)</span>
+              <input name="birthPlace" maxlength="80" placeholder="City, Country">
+            </label>
+          </div>
+          <p id="compatError" class="error" role="alert"></p>
+          <button class="primary" type="submit">See our compatibility</button>
+          <p class="muted small">Computing is free. Asking Luna about the connection uses reading time, like any message.</p>
+        </form>
+        <div id="compatResult" hidden>
+          <div id="compatCats"></div>
+          <table id="compatTable" class="compat-table"></table>
+          <ul id="compatHighs" class="chart-list"></ul>
+          <button id="compatAsk" class="primary" type="button">Ask Luna about us</button>
+          <button id="compatReset" class="pill" type="button">Check someone else</button>
+        </div>
+      </div>
       <div id="messages" class="messages" aria-live="polite"></div>
+      <div id="quickChips" class="quick-chips" hidden>
+        <button class="pill" type="button" data-q="What is my energy like today?">✦ Today's energy</button>
+        <button class="pill" type="button" data-q="How is my love life looking?">Love check-in</button>
+        <button class="pill" type="button" data-q="Anything I should know about my career right now?">Career focus</button>
+        <button class="pill" type="button" data-q="Tell me about my birth chart — what stands out to you?">My chart</button>
+      </div>
       <form id="chatForm" class="composer">
         <input id="chatInput" maxlength="1000" placeholder="Ask Luna anything..." autocomplete="off">
         <button class="primary" type="submit" id="sendBtn">Send</button>
@@ -98,6 +174,52 @@
       <div class="packs" id="packs"></div>
       <p id="pwError" class="error" role="alert"></p>
       <p class="muted small" id="modeNote"></p>
+    </div>
+  </div>
+
+  <!-- Account -->
+  <div id="accountModal" class="overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="acctTitle">
+      <button class="close" id="acctClose" type="button" aria-label="Close">×</button>
+      <h2 id="acctTitle">Your account</h2>
+      <p class="lead" id="acctLead">Sign in to keep your minutes on any device. No account yet? Create one and your current minutes move with you.</p>
+
+      <div id="acctLoggedOut">
+        <form id="acctForm">
+          <label>Email
+            <input name="email" type="email" required maxlength="254" autocomplete="email">
+          </label>
+          <label>Password
+            <input name="password" type="password" required minlength="8" autocomplete="current-password">
+          </label>
+          <p id="acctError" class="error" role="alert"></p>
+          <button class="primary" type="submit" id="acctLoginBtn">Log in</button>
+          <button class="primary" type="button" id="acctRegisterBtn">Create account</button>
+          <p class="muted small"><button type="button" id="acctForgotBtn" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;padding:0">Forgot password?</button></p>
+        </form>
+        <form id="acctResetRequestForm" hidden>
+          <label>Email
+            <input name="email" type="email" required maxlength="254" autocomplete="email">
+          </label>
+          <p id="acctResetRequestMsg" class="muted small"></p>
+          <button class="primary" type="submit">Send reset link</button>
+          <p class="muted small"><button type="button" id="acctBackBtn" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;padding:0">Back to sign in</button></p>
+        </form>
+      </div>
+
+      <div id="acctLoggedIn" hidden>
+        <p class="lead">Signed in as <strong id="acctEmail"></strong>. Your minutes are saved to this account and will be here on any device you sign in from.</p>
+        <button class="primary" type="button" id="acctLogoutBtn">Log out</button>
+      </div>
+
+      <form id="acctResetConfirmForm" hidden>
+        <p class="lead">Choose a new password (at least 8 characters).</p>
+        <label>New password
+          <input name="password" type="password" required minlength="8" autocomplete="new-password">
+        </label>
+        <p id="acctResetConfirmMsg" class="error" role="alert"></p>
+        <button class="primary" type="submit">Set new password</button>
+      </form>
     </div>
   </div>
 
