@@ -1,0 +1,62 @@
+LUNA — CONVERSATIONAL AI ASTROLOGER IMPLEMENTATION LOGIC
+(pasted by Nikki, Oct 30, 2026 — with Muse's implementation status)
+
+STATUS vs THE REAL APP:
+- 1. Context binding: DONE. Luna's system prompt already injects the
+  computed natal chart (all placements + houses + aspects) and, as of
+  Oct 30, today's computed transits over that chart (transitsPromptBlock).
+- 2. Daily welcome + quick-reply chips: PARTIAL. The CLI harness opens
+  with the chart + today's transit feed. In-app: quick-reply chips above
+  the composer are part of the next UI chunk. Chip 3 (compatibility)
+  stays out until synastry actually ships.
+- 3. Three-step question handling: DONE in the CLI router (keyword ->
+  house/theme isolation, overlay on the user's real placements, plain
+  conversational answer, anchor line printed). In the live app the AI
+  prompt receives the same chart + transit data and follows the same
+  rule: never generic, always anchored to their placements.
+- 4. Safeguards: Luna's existing guardrails govern (no medical/legal/
+  financial decision advice; no death/illness/pregnancy/lawsuit
+  predictions). IMPORTANT: the exact pivot string below must NOT be used
+  for "severe mental distress" — Luna already answers self-harm or
+  crisis messages with real support and the 988 line, and that stronger
+  response stays. The pivot string is fine for medical-diagnosis and
+  stock-picking questions only.
+
+======================================================================
+ORIGINAL SPEC TEXT
+======================================================================
+
+1. INITIALIZATION & CONTEXT BINDING
+- Inject the user's computed birth data summary into the AI context as a
+  hidden system header:
+  * "User Natal Data: Sun in Scorpio (2nd House), Moon in Taurus
+    (8th House), Scorpio Rising."
+  * "Current Transits: Mars entering Leo, Full Moon in Taurus."
+
+2. THE OPENING WELCOME SCRIPT (CHOSEN DAILY)
+- Short contextual welcome + quick-reply chips:
+  * "Greetings, Scorpio. The sky is active today as the Full Moon
+    illuminates your natal 8th house of shared resources and deep
+    intuition. What area of your chart shall we look into together?"
+  * Chips: [Read Today's Active Transit] [Ask About My Career House]
+    [Test Relationship Compatibility]
+
+3. LIVE NATURAL LANGUAGE QUESTION HANDLING
+- Step A: Sign & House Isolation ("money" -> 2nd/8th house axis).
+- Step B: Personal Chart Overlay (cross-reference the user's natal
+  placements in the database).
+- Step C: Response Generation — conversational, punchy, never generic.
+  * Example: "With the Full Moon directly opposing your natal Scorpio
+    2nd house of personal finances, today marks a powerful window to
+    review your ongoing budgets or payment schedules. The Taurus energy
+    encourages grounding your practical resources rather than making
+    impulsive moves."
+
+4. CONVERSATIONAL SAFEGUARDS (REJECTION PARSING)
+- Medical diagnoses, severe mental distress, or precise stock/financial
+  market questions: output the pivot string:
+  "As your cosmic mentor, I can beautifully map out the energetic timing
+  and emotional themes surrounding your current transits. However, for
+  specialized medical or financial decisions, I highly recommend
+  consulting with a certified professional."
+  (See status note above: crisis/distress keeps Luna's 988 response.)
