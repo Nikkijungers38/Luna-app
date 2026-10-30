@@ -1,18 +1,19 @@
 :root {
-  --bg: #0b0a1f;
-  --bg2: #17133a;
-  --card: rgba(255, 255, 255, 0.06);
-  --line: rgba(255, 255, 255, 0.14);
-  --text: #ece9ff;
-  --muted: #a9a3d6;
+  /* Design tokens (public/styles/design_system.json) */
+  --bg: #0A0A0C;
+  --bg2: #101016;
+  --card: rgba(20, 20, 24, 0.65);
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #EDEDF2;
+  --muted: #8A8A93;
   --gold: #f4c76a;
-  --violet: #8b6cff;
+  --violet: #8E77FF;
   --danger: #ff8a8a;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
   background: radial-gradient(1200px 700px at 20% -10%, var(--bg2), transparent 60%),
               radial-gradient(900px 600px at 100% 10%, #2a1650, transparent 55%), var(--bg);
@@ -32,7 +33,7 @@ header.top, main, footer { position: relative; z-index: 1; }
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 20px; max-width: 760px; width: 100%; margin: 0 auto;
 }
-.brand { font-size: 1.3rem; letter-spacing: .06em; color: var(--gold); font-weight: 600; }
+.brand { font-family: "Instrument Serif", Georgia, serif; font-size: 1.6rem; letter-spacing: .02em; color: #fff; font-weight: 700; }
 .top-right { display: flex; gap: 10px; align-items: center; }
 .badge {
   font-size: .75rem; padding: 4px 10px; border-radius: 999px;
@@ -50,7 +51,7 @@ main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 0 20px 2
   background: var(--card); border: 1px solid var(--line); border-radius: 18px;
   padding: 28px; backdrop-filter: blur(8px);
 }
-h1 { margin: 0 0 8px; font-size: 1.8rem; font-weight: 600; }
+h1 { font-family: "Instrument Serif", Georgia, serif; margin: 0 0 8px; font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
 h2 { margin: 0 0 8px; }
 h3 { margin: 22px 0 10px; font-size: 1rem; color: var(--muted); font-weight: 500; }
 .lead { color: var(--muted); line-height: 1.5; margin: 0 0 12px; }
@@ -154,3 +155,85 @@ input[type="time"]::-webkit-date-and-time-value {
   text-align: left;
   min-width: 0;
 }
+
+/* Birth chart panel */
+.feature-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+.chart-panel {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px; margin: 0 0 14px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+}
+.chart-wheel { display: flex; justify-content: center; margin-bottom: 6px; }
+.chart-wheel svg { max-width: 100%; height: auto; }
+.chart-list { list-style: none; margin: 0 0 10px; padding: 0; }
+.chart-list li { padding: 5px 0; border-bottom: 1px solid var(--line); font-size: .95rem; }
+.chart-list li:last-child { border-bottom: 0; }
+.chart-list .pl-glyph { color: var(--gold); display: inline-block; width: 1.5em; }
+#chartAsk { width: 100%; margin-top: 8px; }
+
+/* Tarot */
+.tarot-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.tarot-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.tarot-card {
+  flex: 1 1 100px; max-width: 170px; text-align: center;
+  background: rgba(20, 20, 24, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px 10px;
+  animation: cardIn .45s ease both;
+}
+@keyframes cardIn { from { opacity: 0; transform: rotateY(70deg) translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .tarot-card { animation: none; } }
+.tc-pos { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tc-face { font-size: 1.7rem; color: var(--gold); margin: 6px 0 2px; }
+.tc-rev-glyph { transform: rotate(180deg); }
+.tc-name { font-weight: 600; font-size: .98rem; }
+.tc-orient { font-size: .75rem; color: var(--gold); margin: 2px 0 6px; }
+.tc-meaning { font-size: .82rem; color: var(--text); line-height: 1.35; }
+#tarotAsk { width: 100%; margin-top: 8px; }
+
+/* Sky UI: tappable wheel, pop-ups, transit feed, quick replies */
+.wheel-hint { text-align: center; margin: 2px 0 8px; }
+.chart-wheel .hit { cursor: pointer; }
+.chart-wheel .hit:hover text { fill: #ffffff; }
+.chart-list li.tappable { cursor: pointer; }
+.chart-list li.tappable:hover { color: #ffffff; }
+.chart-pop {
+  position: relative; margin: 12px 0; padding: 14px 16px;
+  background: rgba(142, 119, 255, 0.1); border: 1px solid rgba(142, 119, 255, 0.4);
+  border-radius: 16px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.chart-pop .close { position: absolute; top: 6px; right: 10px; }
+.chart-pop-title { font-family: "Instrument Serif", Georgia, serif; font-size: 1.25rem; color: #fff; margin-bottom: 4px; }
+.chart-pop p { margin: 0; line-height: 1.5; font-size: .95rem; }
+.feed-section { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.feed-head { font-family: "Instrument Serif", Georgia, serif; font-size: 1.25rem; color: #fff; margin-bottom: 10px; }
+.range-chips { display: flex; gap: 8px; margin-bottom: 12px; }
+.range-chip.active { background: var(--violet); color: #fff; border-color: transparent; }
+.feed-item {
+  padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); border-radius: 14px;
+}
+.feed-item:hover { border-color: rgba(142, 119, 255, 0.5); }
+.feed-title { font-weight: 600; color: #fff; margin: 6px 0 2px; }
+.tag {
+  display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+  padding: 3px 9px; border-radius: 999px; color: #d9d2ff;
+  background: rgba(142, 119, 255, 0.18); border: 1px solid rgba(142, 119, 255, 0.45);
+}
+#feedAsk { width: 100%; margin-top: 6px; }
+.quick-chips { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px; }
+.quick-chips .pill { white-space: nowrap; }
+.primary { transition: box-shadow .2s ease; }
+.primary:hover { box-shadow: 0 0 18px rgba(142, 119, 255, 0.5); }
+
+/* Compatibility */
+.cat-row { margin-bottom: 14px; }
+.cat-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.cat-head strong { color: var(--gold); }
+.bar { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.bar .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--violet), #c06bff); }
+.compat-table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: .95rem; }
+.compat-table th, .compat-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.compat-table th { color: #fff; }
+#compatReset { margin-top: 10px; }
+#compatAsk { width: 100%; margin-top: 8px; }
