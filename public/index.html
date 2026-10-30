@@ -74,10 +74,30 @@
     <!-- Chat -->
     <section id="chat" class="chat" hidden>
       <div class="chart" id="chartLine"></div>
-      <div class="feature-btns">
-        <button id="chartToggle" class="pill" type="button" hidden>✦ Your birth chart</button>
-        <button id="tarotToggle" class="pill" type="button" hidden>✦ Tarot draw</button>
-        <button id="compatToggle" class="pill" type="button" hidden>✦ Compatibility</button>
+      <div id="homeMenu" class="home-menu">
+        <p class="home-menu-title">What would you like to explore?</p>
+        <div class="menu-grid">
+          <button id="menuChat" class="menu-card menu-card-wide" type="button">
+            <span class="menu-card-name">✦ Chat reading</span>
+            <span class="menu-card-desc">Ask Luna anything — she reads your chart and the sky as you talk.</span>
+          </button>
+          <button id="chartToggle" class="menu-card" type="button" hidden>
+            <span class="menu-card-name">☉ Your birth chart</span>
+            <span class="menu-card-desc">Your wheel and planets — tap anything to see what it means.</span>
+          </button>
+          <button id="menuSky" class="menu-card" type="button" hidden>
+            <span class="menu-card-name">☽ Today's sky</span>
+            <span class="menu-card-desc">The transits moving through your chart right now, in plain words.</span>
+          </button>
+          <button id="tarotToggle" class="menu-card" type="button" hidden>
+            <span class="menu-card-name">✧ Tarot draw</span>
+            <span class="menu-card-desc">Pull one card, or a Past · Present · Future spread. Drawing is free.</span>
+          </button>
+          <button id="compatToggle" class="menu-card" type="button" hidden>
+            <span class="menu-card-name">♥ Compatibility</span>
+            <span class="menu-card-desc">Your chart against theirs — three honest scores.</span>
+          </button>
+        </div>
       </div>
       <div id="chartPanel" class="chart-panel" hidden>
         <div id="chartWheel" class="chart-wheel"></div>
